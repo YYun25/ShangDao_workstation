@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>傳統豆花課程 - 互動教學系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基本變數 */
+        :root {
+            --primary: #6bffab; /* 上統食品Logo色系 */
+            --primary-light: #e8ffe8;
+            --primary-dark: #36d274;
+            --secondary: #4ecdc4;
+            --secondary-dark: #3aa8a0;
+            --dark: #2d3436;
+            --light: #f7f9fc;
+            --gray: #dfe6e9;
+            --text-color: #4a4a4a;
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-medium: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 全局樣式 */
+        body {
+            font-family: 'Noto Sans TC', "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* 背景改成嫩綠漸層 */
+            background:
+              radial-gradient(circle at 0% 0%, #e9f9c7 0, transparent 45%),
+              radial-gradient(circle at 100% 100%, #f5ffe5 0, transparent 45%),
+              #f7fbe9;
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* 美化捲軸 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--gray); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
+
+        /* 側邊導航 */
+        .sidebar {
+            width: 300px;
+            background: rgba(255,255,255,0.96);
+            border-right: 1px solid var(--gray);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: var(--shadow-light);
+            z-index: 10;
+            backdrop-filter: blur(8px);
+        }
+
+        .brand {
+            padding: 25px 20px;
+            /* 上方 title 區改成綠色漸層 */
+            background: radial-gradient(circle at 0 0, #e4f7b8, #cfe78f);
+            color: white;
+            text-align: center;
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .brand h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: 1px; }
+        .brand p { margin: 8px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: 300; }
+
+        .nav-list { list-style: none; padding: 6px 0 10px; margin: 0; flex-grow: 1; }
+
+        .nav-item {
+            padding: 14px 22px;
+            cursor: pointer;
+            border-bottom: 1px dashed rgba(223,230,233,0.8);
+            transition:
+              background 0.18s ease-in-out,
+              border-left 0.18s ease-in-out,
+              transform 0.1s ease-out,
+              box-shadow 0.18s ease-in-out;
+            color: var(--dark);
+            font-weight: 400;
+        }
+
+        .nav-item:hover {
+            background-color: #f4ffef;
+            color: var(--primary-dark);
+            transform: translateX(2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .nav-item.active {
+            background-color: var(--primary-light);
+            border-left: 6px solid var(--primary);
+            font-weight: 700;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* 主內容區 */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: transparent;
+        }
+
+        /* 容器淡入特效 */
+        .recipe-wrapper {
+            animation: fadeInUp 0.45s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 圖片區塊樣式 */
+        .recipe-banner {
+            width: 100%;
+            height: 280px;
+            /* 原本粉橘改成豆花綠漸層 */
+            background: linear-gradient(135deg, #e0f5b5, #cfe78f);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: var(--shadow-medium);
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+        }
+
+        .recipe-banner::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 60px;
+            background: linear-gradient(to top, rgba(0,0,0,0.32), transparent);
+            pointer-events: none;
+        }
+
+        .recipe-banner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+        }
+
+        .recipe-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* 當圖片載入失敗時顯示的文字樣式 */
+        .img-placeholder-text {
+            position: absolute;
+            color: #fefefe;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background-color: rgba(0,0,0,0.35);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            pointer-events: none;
+        }
+
+        .recipe-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--gray); padding-bottom: 25px; margin-bottom: 30px;
+            gap: 16px; flex-wrap: wrap;
+        }
+
+        .recipe-title h2 { margin: 0; font-size: 2.5rem; color: var(--dark); font-weight: 700; }
+        .recipe-title small { font-size: 0.9rem; color: #888; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+
+        .portion-control {
+            background: white; padding: 10px 22px; border-radius: 30px;
+            box-shadow: var(--shadow-light); display: flex; align-items: center; gap: 10px; font-weight: 400;
+            border: 1px solid rgba(223,230,233,0.9);
+        }
+
+        .portion-control label { color: var(--dark); }
+
+        .portion-control input {
+            width: 70px; padding: 8px; font-size: 1.1rem; text-align: center;
+            border: 1px solid var(--gray); border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+        .portion-control input:focus {
+            outline: none; border-color: var(--secondary);
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+
+        /* 卡片通用樣式 */
+        .card {
+            background: rgba(255,255,255,0.96);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-medium);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .card h3 {
+            margin-top: 0; color: var(--primary);
+            border-bottom: 2px solid var(--primary-light); padding-bottom: 15px; margin-bottom: 16px;
+            font-size: 1.5rem; font-weight: 700;
+        }
+
+        .card .steps-card-title { display: none; } /* 隱藏舊的 H3 */
+
+        /* 食材列表 */
+        .ingredient-list { list-style: none; padding: 0; }
+        .ingredient-item {
+            display: flex; justify-content: space-between; padding: 10px 5px;
+            border-bottom: 1px dashed var(--gray); font-size: 1.05rem;
+            border-radius: 10px;
+            transition: background 0.15s ease-in-out, transform 0.08s ease-out;
+        }
+        .ingredient-item:last-child { border-bottom: none; }
+        .ingredient-item:hover {
+            background: #f4ffef;
+            transform: translateY(-1px);
+        }
+        .amount { font-weight: 700; color: var(--primary); }
+
+        /* 步驟/影片 標籤頁樣式 START */
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid var(--gray);
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #888;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-bottom-color 0.2s, transform 0.1s;
+        }
+        .tab-button:hover:not(.active) {
+            color: var(--secondary-dark);
+            transform: translateY(-1px);
+        }
+        .tab-button.active {
+            color: var(--secondary);
+            border-bottom: 3px solid var(--secondary);
+        }
+        .tab-content {
+            display: none;
+            padding-top: 10px;
+            max-height: calc(100vh - 450px); 
+            overflow-y: auto;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeInTab 0.3s ease-out;
+        }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 影片播放器容器 */
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16 / 9; 
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow-medium);
+            background-color: var(--dark);
+        }
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .no-video-message {
+            text-align: center;
+            padding: 50px 20px;
+            color: #888;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        /* 步驟/影片 標籤頁樣式 END */
+
+        /* 步驟項目 */
+        .step-item { margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-start; padding-left: 5px; }
+        .step-checkbox { min-width: 24px; min-height: 24px; margin-top: 4px; cursor: pointer; accent-color: var(--secondary); transform: scale(1.05); }
+        .step-content { flex: 1; line-height: 1.7; font-size: 1.05rem; color: var(--text-color); padding: 4px 6px; border-radius: 10px; transition: background 0.15s, box-shadow 0.15s, transform 0.1s; }
+        .step-content label { cursor: pointer; }
+
+        /* 勾選步驟後的效果 */
+        .step-checkbox:checked + .step-content {
+            background: #eafaf3;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+        .step-checkbox:checked + .step-content label {
+            text-decoration: line-through;
+            color: #3aa8a0;
+        }
+
+        /* 計時器 */
+        .timer-btn {
+            background-color: var(--secondary); color: white; border: none; padding: 10px 20px;
+            border-radius: 25px; cursor: pointer; font-weight: bold; margin-top: 12px;
+            display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+            transition: background-color 0.2s ease-in-out, transform 0.08s ease-out, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(78,205,196,0.35);
+        }
+        .timer-btn:hover { background-color: var(--secondary-dark); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(58,168,160,0.4); }
+        .timer-btn:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .timer-btn.running { background-color: #ff9f43; box-shadow: 0 4px 10px rgba(255,159,67,0.4); }
+        .timer-btn.running:hover { background-color: #e68e3c; }
+
+        /* 左下角返回鍵 */
+        .back-btn {
+            position: fixed;
+            left: 320px;
+            bottom: 20px;
+            z-index: 20;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow-medium);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s ease-in-out,
+                        transform 0.08s ease-out,
+                        box-shadow 0.2s ease-in-out;
+        }
+
+        .back-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+        }
+
+        .back-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        /* 小螢幕時 sidebar 在上面，按鈕就回到真正左下角 */
+        @media (max-width: 768px) {
+            .back-btn {
+                left: 20px;
+                bottom: 20px;
+            }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 992px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .recipe-banner { height: 200px; }
+            .tab-content { max-height: 400px; }
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            .sidebar { width: 100%; height: auto; max-height: 150px; border-right: none; border-bottom: 1px solid var(--gray); }
+            .nav-list { display: flex; overflow-x: auto; border-top: 1px solid var(--gray); }
+            .nav-item { flex-shrink: 0; padding: 12px 15px; border-bottom: none; border-right: 1px solid var(--gray); text-align: center; white-space: nowrap; }
+            .nav-item.active { border-left: none; border-bottom: 3px solid var(--primary); }
+            .main-content { padding: 20px; }
+            .tab-content { max-height: 300px; }
+        }
+    </style>
+  <link rel="stylesheet" href="../../assets/language.css">
+  <script src="../../assets/translations.js" defer></script>
+  <script src="../../assets/language.js" defer></script>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <h1>傳統豆花課程</h1>
+            <p>6小時豆花與配料專業培訓</p>
+        </div>
+        <ul class="nav-list" id="navList"></ul>
+    </div>
+
+    <div class="main-content">
+        <div id="recipeContainer">
+            <div style="text-align: center; margin-top: 50px; color: #666;">
+                <h2>👋 歡迎進入豆花數位教室</h2>
+                <p>請從左側選單選擇一個豆花主體或配料教學。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 左下角返回按鈕 -->
+    <button class="back-btn" onclick="history.back()">
+        ← 返回上一頁
+    </button>
+
+    <script>
+        // 設定圖片路徑的前綴與後綴
+        const IMG_PATH = ""; 
+        const IMG_EXTENSION = ".jpg"; 
+        
+        const recipes = [
+            {
+                id: 1,
+                imgId: "img_01", 
+                videoUrl: "https://www.youtube.com/embed/fgmPgwi7yqU", // 可替換為豆花實作影片
+                name: "滑嫩豆花",
+                category: "豆花主體",
+                ingredients: [
+                    { name: "生黃豆", base: 300, unit: "g" },
+                    { name: "水（打漿用）", base: 3000, unit: "g" },
+                    { name: "嫩豆花粉", base: 60, unit: "g" },
+                    { name: "水（調粉用）", base: 250, unit: "g" }
+                ],
+                steps: [
+                    { text: "黃豆以冷水浸泡至膨脹，夏天約 4 小時，冬天約 7～8 小時。", timer: 0 },
+                    { text: "將浸泡完成的黃豆瀝乾後，再加水（300g 生豆需加 3kg 水，水越少豆花越硬）。", timer: 0 },
+                    { text: "放入脫渣磨豆機研磨成生豆漿，約可得 3kg 生豆漿。", timer: 0 },
+                    { text: "以中火將生豆漿煮開（不可用大火），煮開後續煮約 7 分鐘。", timer: 420 },
+                    { text: "確認豆漿濃度達 5.5° 以上，並降溫至約 90°C。", timer: 0 },
+                    { text: "將嫩豆花粉 60g 與水 250g 調勻成粉水。", timer: 0 },
+                    { text: "先把粉水倒入豆花桶，再將煮好的熱豆漿倒入，不可攪拌，靜置讓其成型。", timer: 0 },
+                    { text: "待放涼後冷藏，冷食或熱食皆可。", timer: 0 }
+                ]
+            },
+            {
+                id: 2,
+                imgId: "img_02", 
+                videoUrl: "", 
+                name: "蜜綠豆",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "生綠豆", base: 100, unit: "g" },
+                    { name: "二砂糖", base: 100, unit: "g" },
+                    { name: "水", base: 200, unit: "cc" }
+                ],
+                steps: [
+                    { text: "綠豆洗淨後，以冷水浸泡約 1 小時，水要蓋過綠豆。", timer: 0 },
+                    { text: "瀝乾後放入沸水中，小火煮約 5 分鐘，撈起再以清水洗淨。", timer: 300 },
+                    { text: "重新加水入鍋，改用蒸的方式蒸 30 分鐘，再燜 30 分鐘（水再度煮滾後開始計時）。", timer: 3600 },
+                    { text: "熟綠豆加入二砂糖，小火煮至糖完全溶解並拌勻。", timer: 0 }
+                ]
+            },
+            {
+                id: 3,
+                imgId: "img_03",
+                videoUrl: "",
+                name: "蜜紅豆",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "生紅豆", base: 100, unit: "g" },
+                    { name: "二砂糖", base: 100, unit: "g" },
+                    { name: "水", base: 200, unit: "cc" }
+                ],
+                steps: [
+                    { text: "紅豆洗淨後，以 100℃ 熱水浸泡約 2 小時並加蓋。", timer: 0 },
+                    { text: "瀝乾後放入沸水，小火煮約 10 分鐘，撈起再以清水洗淨。", timer: 600 },
+                    { text: "重新加水入鍋，蒸約 30 分鐘，再燜 30 分鐘（水再度煮滾後開始計時）。", timer: 3600 },
+                    { text: "熟紅豆加入二砂糖，小火煮至糖溶並拌勻。", timer: 0 }
+                ]
+            },
+            {
+                id: 4,
+                imgId: "img_04",
+                videoUrl: "",
+                name: "蜜花豆",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "生花豆", base: 100, unit: "g" },
+                    { name: "二砂糖", base: 100, unit: "g" },
+                    { name: "水", base: 200, unit: "cc" }
+                ],
+                steps: [
+                    { text: "花豆洗淨後，以 100℃ 熱水浸泡約 2 小時並加蓋。", timer: 0 },
+                    { text: "瀝乾後放入沸水，小火煮約 10 分鐘，撈起再以清水洗淨。", timer: 600 },
+                    { text: "重新加水入鍋，蒸約 1 小時，再燜 30 分鐘（水再度煮滾後開始計時）。", timer: 5400 },
+                    { text: "熟花豆加入二砂糖，小火煮至糖溶並略收乾。", timer: 0 }
+                ]
+            },
+            {
+                id: 5,
+                imgId: "img_05",
+                videoUrl: "",
+                name: "蜜蓮子",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "去心乾蓮子", base: 100, unit: "g" },
+                    { name: "細糖", base: 54, unit: "g" },
+                    { name: "熱水", base: 200, unit: "cc" }
+                ],
+                steps: [
+                    { text: "乾蓮子洗淨後，以沸水浸泡約 2 小時，水須蓋過蓮子並加蓋。", timer: 0 },
+                    { text: "將熱水與細糖煮成糖水。", timer: 0 },
+                    { text: "把瀝乾的蓮子放入糖水中，蒸約 1 小時。", timer: 3600 },
+                    { text: "起鍋後如糖水較多，可在瓦斯爐上略收乾。", timer: 0 }
+                ]
+            },
+            {
+                id: 6,
+                imgId: "img_06",
+                videoUrl: "",
+                name: "蜜地瓜",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "去皮紅心地瓜", base: 400, unit: "g" },
+                    { name: "二砂糖", base: 50, unit: "g" }
+                ],
+                steps: [
+                    { text: "地瓜去皮切塊，放入蒸籠蒸約 30 分鐘，筷子可輕鬆刺透即熟。", timer: 1800 },
+                    { text: "趁熱加入二砂糖，小火拌煮至糖液略收、均勻包裹地瓜。", timer: 0 }
+                ]
+            },
+            {
+                id: 7,
+                imgId: "img_07",
+                videoUrl: "",
+                name: "蜜芋頭",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "去皮檳榔心芋頭", base: 340, unit: "g" },
+                    { name: "二砂糖", base: 165, unit: "g" },
+                    { name: "水", base: 165, unit: "cc" }
+                ],
+                steps: [
+                    { text: "芋頭去皮切塊，蒸約 30 分鐘後再燜 30 分鐘。", timer: 3600 },
+                    { text: "將二砂糖與水煮成糖水備用。", timer: 0 },
+                    { text: "趁熱把糖水倒入芋頭中略翻拌，使糖液均勻沾附芋頭並略收乾。", timer: 0 }
+                ]
+            },
+            {
+                id: 8,
+                imgId: "img_08",
+                videoUrl: "",
+                name: "蜜花生仁",
+                category: "配料 / 甜湯",
+                ingredients: [
+                    { name: "去皮花生仁", base: 100, unit: "g" },
+                    { name: "細糖", base: 100, unit: "g" },
+                    { name: "100℃ 熱水", base: 200, unit: "cc" }
+                ],
+                steps: [
+                    { text: "花生仁洗淨後，以 100℃ 熱水浸泡約 2 小時並加蓋。", timer: 0 },
+                    { text: "連同泡水一起蒸約 1.5 小時，再燜 30 分鐘。", timer: 7200 },
+                    { text: "趁熱加入細糖拌勻，如水分過多，可於瓦斯爐上略收乾。", timer: 0 }
+                ]
+            },
+            {
+                id: 9,
+                imgId: "img_09",
+                videoUrl: "",
+                name: "芋圓",
+                category: "Q彈配料",
+                ingredients: [
+                    { name: "熟芋頭（芋泥＋芋絲）", base: 300, unit: "g" },
+                    { name: "糊化漿（糊化粉:水＝1:7）", base: 86, unit: "g" },
+                    { name: "上統芋圓預拌粉", base: 120, unit: "g" },
+                    { name: "蔗糖糖水", base: 1, unit: "份" }
+                ],
+                steps: [
+                    { text: "芋頭去皮切塊蒸約 30 分鐘即可，蒸熟後可趁熱或冷卻後壓成芋泥；芋頭絲另蒸約 10 分鐘備用。", timer: 1800 },
+                    { text: "製作糊化漿：將糊化粉與水加熱至呈透明狀，放涼備用。", timer: 0 },
+                    { text: "熟芋頭泥加入糊化漿與芋圓預拌粉，搓揉成糰，再加入芋頭絲揉勻，如太乾可再少量補糊化漿，太濕則酌量補糊化粉。", timer: 0 },
+                    { text: "將粉糰分成數塊，搓成長條後切成適當大小，即為生芋圓。", timer: 0 },
+                    { text: "煮一鍋水至大滾，加入生芋圓，中火煮至芋圓全部浮起。", timer: 0 },
+                    { text: "改中小火續煮約 3 分鐘後撈出，泡入冷飲用水稍冷卻後瀝乾，再加入少許蔗糖拌勻防沾黏。", timer: 180 }
+                ]
+            },
+            {
+                id: 10,
+                imgId: "img_10",
+                videoUrl: "",
+                name: "珍珠",
+                category: "Q彈配料",
+                ingredients: [
+                    { name: "乾珍珠（任一規格）", base: 300, unit: "g" },
+                    { name: "水", base: 3000, unit: "cc" },
+                    { name: "黑糖蜜", base: 100, unit: "cc" }
+                ],
+                steps: [
+                    { text: "準備一鍋足量的水，確實煮至大滾後再下珍珠，下鍋時要一邊倒一邊攪拌。", timer: 0 },
+                    { text: "待珍珠全部浮上水面後，再次大滾即開始計時，轉中火加蓋（留一點縫）依珍珠規格煮至熟透。", timer: 0 },
+                    { text: "確認珍珠中心撕開呈透明狀代表已熟，加入約 100cc 黑糖蜜拌勻後關火，加蓋悶煮，保留部分老化水。", timer: 0 },
+                    { text: "悶好後以冷開水輕洗珍珠並瀝乾，避免在水下過度沖洗導致迅速冷卻變硬。", timer: 0 },
+                    { text: "瀝乾後再加入黑糖蜜攪拌均勻，即可使用，建議新鮮期約 4～6 小時，常溫並置於保鮮盒保存。", timer: 0 }
+                ]
+            }
+        ];
+
+        let currentRecipe = null;
+        let portionMultiplier = 1;
+        let activeTimer = null; 
+
+        function init() {
+            renderNav();
+        }
+
+        // 渲染導航選單
+        function renderNav() {
+            const list = document.getElementById('navList');
+            list.innerHTML = '';
+            recipes.forEach(recipe => {
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                li.textContent = recipe.name;
+                li.onclick = () => loadRecipe(recipe.id);
+                li.id = `nav-${recipe.id}`;
+                list.appendChild(li);
+            });
+        }
+
+        // 載入食譜內容
+        function loadRecipe(id) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${id}`).classList.add('active');
+            currentRecipe = recipes.find(r => r.id === id);
+            portionMultiplier = 1;
+            renderContent();
+            const defaultTabBtn = document.querySelector('.tab-button');
+            if(defaultTabBtn) switchTab(defaultTabBtn, 'steps');
+        }
+
+        // 處理標籤頁切換
+        function switchTab(clickedButton, tabId) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            clickedButton.classList.add('active');
+            document.getElementById(tabId + '-content').classList.add('active');
+        }
+
+        // 渲染主內容區域
+        function renderContent() {
+            if (!currentRecipe) return;
+
+            const container = document.getElementById('recipeContainer');
+            const imgSrc = IMG_PATH + currentRecipe.imgId + IMG_EXTENSION;
+
+            const ingredientsHtml = currentRecipe.ingredients.map(ing => {
+                if(ing.name === "---") return '<hr style="border: none; border-top: 1px dashed var(--gray); margin: 15px 0;">';
+                const amount = ing.base > 0 ? (ing.base * portionMultiplier).toFixed(1).replace('.0', '') : '';
+                return `<li class="ingredient-item"><span>${ing.name}</span><span class="amount">${amount} ${ing.unit}</span></li>`;
+            }).join('');
+
+            const stepsHtml = currentRecipe.steps.map((step, index) => {
+                let timerHtml = '';
+                if (step.timer > 0) {
+                    timerHtml = `<button class="timer-btn" onclick="toggleTimer(this, ${step.timer})">⏱ 開始計時 (${formatTime(step.timer)})</button>`;
+                }
+                return `
+                    <div class="step-item">
+                        <input type="checkbox" class="step-checkbox" id="step-${currentRecipe.id}-${index}">
+
+                        <div class="step-content">
+                            <label for="step-${currentRecipe.id}-${index}">${index + 1}. ${step.text}</label>
+                            <br>${timerHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            let videoHtml = '';
+            if (currentRecipe.videoUrl && currentRecipe.videoUrl.trim() !== '') {
+                videoHtml = `
+                    <div class="video-container">
+                        <iframe 
+                            src="${currentRecipe.videoUrl}" 
+                            title="${currentRecipe.name} 教學影片" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerpolicy="strict-origin-when-cross-origin" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                `;
+            } else {
+                 videoHtml = `
+                    <div class="no-video-message">
+                        <p>此食譜目前沒有上傳教學影片。</p>
+                        <p>請將 YouTube 嵌入連結填入 JS 檔案中的 <code>videoUrl</code> 欄位。</p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="recipe-wrapper">
+                    <div class="recipe-banner">
+                        <img src="${imgSrc}" alt="${currentRecipe.name}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="img-placeholder-text" style="display:none;">此料理示意圖尚未設定</div>
+                    </div>
+                    <div class="recipe-header">
+                        <div class="recipe-title">
+                            <small>${currentRecipe.category}</small>
+                            <h2>${currentRecipe.name}</h2>
+                        </div>
+                        <div class="portion-control">
+                            <label>製作份量：</label>
+                            <input type="number" value="${portionMultiplier}" step="0.5" min="0.5" onchange="updatePortion(this.value)">
+                            <span>倍配方</span>
+                        </div>
+                    </div>
+
+                    <div class="grid-layout">
+                        <div class="card">
+                            <h3>📋 食材配方</h3>
+                            <ul class="ingredient-list">${ingredientsHtml}</ul>
+                        </div>
+
+                        <div class="card">
+                            <div class="tab-buttons">
+                                <button class="tab-button" id="steps-tab" onclick="switchTab(this, 'steps')">👨‍🍳 步驟教學</button>
+                                <button class="tab-button" id="video-tab" onclick="switchTab(this, 'video')">▶ 影片教學</button>
+                            </div>
+
+                            <div id="steps-content" class="tab-content">${stepsHtml}</div>
+                            <div id="video-content" class="tab-content">${videoHtml}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('steps-tab').click(); 
+        }
+
+        // 更新份量計算
+        function updatePortion(val) {
+            portionMultiplier = parseFloat(val);
+            if(isNaN(portionMultiplier) || portionMultiplier < 0.1) portionMultiplier = 1;
+            renderContent();
+        }
+
+        // 計時器功能
+        function toggleTimer(btn, seconds) {
+            const wasRunning = btn.classList.contains('running');
+            if (activeTimer) {
+                clearInterval(activeTimer.interval);
+                activeTimer.btn.classList.remove('running');
+                if (activeTimer.btn !== btn) { 
+                    activeTimer.btn.textContent = `⏱ 開始計時 (${formatTime(activeTimer.originalSeconds)})`;
+                }
+            }
+
+            if (wasRunning) {
+                clearInterval(activeTimer.interval);
+                btn.classList.remove('running');
+                btn.textContent = `⏱ 重置計時 (${formatTime(seconds)})`;
+                activeTimer = null;
+            } else {
+                let left = seconds;
+                btn.classList.add('running');
+                btn.textContent = `⏳ 剩餘 ${formatTime(left)}`;
+
+                const interval = setInterval(() => {
+                    left--;
+                    btn.textContent = `⏳ 剩餘 ${formatTime(left)}`;
+                    if (left <= 0) {
+                        clearInterval(interval);
+                        btn.classList.remove('running');
+                        btn.textContent = "🔔 時間到！完成！";
+                        alert("時間到囉！");
+                        activeTimer = null;
+                    }
+                }, 1000);
+
+                activeTimer = { interval: interval, btn: btn, originalSeconds: seconds };
+            }
+        }
+
+        // 格式化時間顯示
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            const sDisplay = s > 0 ? s + '秒' : '';
+            if (m === 0 && s === 0) return '0秒';
+            return `${m}分${sDisplay}`;
+        }
+        
+        // 啟動應用
+        init();
+    </script>
+</body>
+</html>

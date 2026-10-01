@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上統 智能聊天</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #7494c0; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        /* 登入區塊 */
+        #login-section { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 300px; text-align: center; }
+        #login-section h2 { margin-bottom: 20px; color: #333; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        #login-btn { width: 100%; padding: 12px; background: #00c300; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        #login-btn:hover { background: #00a300; }
+        #error-msg { color: red; font-size: 14px; margin-top: 10px; display: none; }
+
+        /* 聊天室區塊 - 寬版 800px */
+        #chat-section { display: none; width: 60%; height: 600px; background: white; flex-direction: column; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow: hidden; }
+        #chat-header { background: #35495e; color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 18px; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #ededed; }
+        
+        /* 訊息氣泡 */
+        .msg { padding: 10px 15px; border-radius: 10px; max-width: 75%; line-height: 1.5; word-wrap: break-word; font-size: 15px; position: relative; }
+        .user { align-self: flex-end; background: #cef9cf; border-top-right-radius: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .bot { align-self: flex-start; background: white; border-top-left-radius: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+
+        /* 輸入區 */
+        #input-area { display: flex; padding: 20px; background: white; border-top: 1px solid #ddd; }
+        #user-input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; outline: none; font-size: 16px; }
+        #send-btn { margin-left: 10px; padding: 0 30px; background: #00c300; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-section">
+        <h2>系統登入</h2>
+        <input type="text" id="username" class="login-input" placeholder="帳號" 
+               onkeypress="if(event.key === 'Enter') document.getElementById('password').focus()">
+        
+        <input type="password" id="password" class="login-input" placeholder="密碼" 
+               onkeypress="if(event.key === 'Enter') checkLogin()">
+        
+        <button id="login-btn" onclick="checkLogin()">登入</button>
+        <p id="error-msg">帳號或密碼錯誤！</p>
+    </div>
+
+    <div id="chat-section">
+        <div id="chat-header">上統 智能聊天</div>
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="請輸入訊息..." 
+                   onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button id="send-btn" onclick="sendMessage()">送出</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 設定區 ---
+        const VALID_USER = "1";
+        const VALID_PASS = "1";
+        // 請確保 B 主機 IP 與 n8n 連結正確
+        const N8N_URL = "http://192.168.1.111:5678/webhook/chat"; 
+
+        // --- 登入邏輯 ---
+        function checkLogin() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const error = document.getElementById('error-msg');
+
+            if (u === VALID_USER && p === VALID_PASS) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'flex';
+                document.getElementById('user-input').focus(); // 登入後自動 focus 聊天輸入框
+            } else {
+                error.style.display = 'block';
+                document.getElementById('password').value = ''; // 錯了就清空密碼
+            }
+        }
+
+     // --- 聊天邏輯 ---
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            // 顯示使用者訊息
+            appendMessage('user', text);
+            input.value = '';
+
+            try {
+                const response = await fetch(N8N_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chatInput: text,
+                        user: VALID_USER,
+                        timestamp: new Date().toISOString(),
+                        sessionId: "user_001"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`n8n 無回應，HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                console.log("n8n 回傳：", data);
+
+                // =========================
+                // 食譜
+                // =========================
+                if (
+                    data.type === "recipe" &&
+                    data.found === true &&
+                    data.url
+                ) {
+                    appendLinkMessage(
+                        data.reply,
+                        data.url,
+                        "查看食譜"
+                    );
+                    return;
+                }
+
+                // =========================
+                // 開店預算 / 文件
+                // =========================
+                if (
+                    data.type === "document" &&
+                    data.found === true &&
+                    data.url
+                ) {
+                    appendLinkMessage(
+                        data.reply,
+                        data.url,
+                        "查看文件"
+                    );
+                    return;
+                }
+
+                // =========================
+                // 一般 FAQ / 閒聊 / Other
+                // 或是食譜、文件沒有找到
+                // =========================
+                appendMessage(
+                    'bot',
+                    data.reply || "訊息已收到，但 n8n 尚未回覆內容。"
+                );
+
+            } catch (err) {
+                console.error("聊天系統錯誤：", err);
+
+                appendMessage(
+                    'bot',
+                    "系統連線異常，請確認 n8n 是否啟動，以及 Webhook 網址是否正確。"
+                );
+            }
+        }
+
+
+        // =============================
+        // 一般文字訊息
+        // =============================
+        function appendMessage(sender, text) {
+            const msgDiv = document.getElementById('messages');
+
+            const div = document.createElement('div');
+            div.className = `msg ${sender}`;
+            div.innerText = text;
+
+            msgDiv.appendChild(div);
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+        }
+
+
+        // =============================
+        // 有連結的訊息
+        // 食譜與文件共用
+        // =============================
+        function appendLinkMessage(text, url, buttonText) {
+            const msgDiv = document.getElementById('messages');
+
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+
+            // 回覆文字
+            const textDiv = document.createElement('div');
+            textDiv.innerText = text;
+            div.appendChild(textDiv);
+
+            // 連結按鈕
+            const link = document.createElement('a');
+
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.innerText = buttonText;
+
+            link.style.display = 'inline-block';
+            link.style.marginTop = '10px';
+            link.style.padding = '8px 14px';
+            link.style.background = '#4CAF50';
+            link.style.color = '#FFFFFF';
+            link.style.textDecoration = 'none';
+            link.style.borderRadius = '6px';
+            link.style.fontSize = '14px';
+            link.style.cursor = 'pointer';
+
+            div.appendChild(link);
+
+            msgDiv.appendChild(div);
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>

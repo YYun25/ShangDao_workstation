@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上統食品 - 圓夢飲品教學系統 (含心智圖)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ====================
+           基本變數與全局樣式
+           ==================== */
+        :root {
+            --primary: #008CBA;
+            --primary-light: #f0f8ff;
+            --primary-dark: #007399;
+            --secondary: #E84545;
+            --dark: #2d3436;
+            --light: #f7f9fc;
+            --gray: #dfe6e9;
+            --text-color: #4a4a4a;
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-medium: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Noto Sans TC', "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--light);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--gray); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
+
+        /* ====================
+           側邊導航
+           ==================== */
+        .sidebar {
+            width: 300px;
+            background: rgba(255,255,255,0.96);
+            border-right: 1px solid var(--gray);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: var(--shadow-light);
+            z-index: 10;
+        }
+
+        .brand {
+            padding: 25px 20px;
+            background: linear-gradient(135deg, #008CBA, #005f7f);
+            color: white;
+            text-align: center;
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .brand h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }
+        .brand p { margin: 8px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: 300; }
+
+        .nav-list { list-style: none; padding: 6px 0 10px; margin: 0; flex-grow: 1; }
+
+        .nav-item {
+            padding: 14px 22px;
+            cursor: pointer;
+            border-bottom: 1px dashed rgba(223,230,233,0.8);
+            transition: all 0.18s ease-in-out;
+            color: var(--dark);
+            font-weight: 400;
+        }
+        .nav-item:hover {
+            background-color: #f0f8ff;
+            color: var(--primary-dark);
+            padding-left: 28px;
+        }
+        .nav-item.active {
+            background-color: var(--primary-light);
+            border-left: 6px solid var(--primary);
+            font-weight: 700;
+            color: var(--primary);
+        }
+        /* 特殊樣式給心智圖按鈕 */
+        .nav-item.mindmap-btn {
+            background: #fff8e1;
+            border-bottom: 2px solid #ffe082;
+            color: #d35400;
+            font-weight: bold;
+        }
+        .nav-item.mindmap-btn:hover { background: #ffe0b2; }
+        .nav-item.mindmap-btn.active {
+            background: #ffe0b2;
+            border-left: 6px solid #e67e22;
+            color: #d35400;
+        }
+
+        /* ====================
+           主內容區
+           ==================== */
+        .main-content {
+            flex: 1;
+            padding: 0; /* 改為0以便心智圖滿版，食譜區自己加padding */
+            overflow-y: auto;
+            background-color: transparent;
+            position: relative;
+        }
+
+        /* 食譜容器 (有Padding) */
+        .recipe-container-padding {
+            padding: 30px;
+        }
+
+        .recipe-wrapper { animation: fadeInUp 0.45s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 圖片區塊 */
+        .recipe-banner {
+            width: 100%; height: 180px;
+            background: linear-gradient(135deg, #e3f4ff, #fff);
+            border-radius: 15px; overflow: hidden;
+            margin-bottom: 30px; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-medium); border: 1px solid #eee;
+        }
+        .img-placeholder-text {
+            color: var(--primary); font-size: 1.5rem; font-weight: bold; text-align: center; opacity: 0.3;
+        }
+
+        /* 標題與控制區 */
+        .recipe-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 2px solid var(--gray); padding-bottom: 20px; margin-bottom: 25px;
+            gap: 16px; flex-wrap: wrap;
+        }
+        .recipe-title h2 { margin: 0; font-size: 2.2rem; color: var(--dark); font-weight: 700; }
+        .recipe-title small { font-size: 1rem; color: var(--secondary); letter-spacing: 0.5px; display: block; margin-bottom: 5px; font-weight: bold; }
+
+        /* 容量切換按鈕 */
+        .size-switcher { display: flex; background: #e0e0e0; padding: 4px; border-radius: 30px; gap: 4px; }
+        .size-btn {
+            border: none; padding: 8px 20px; border-radius: 25px; cursor: pointer;
+            font-weight: bold; color: #666; background: transparent; transition: all 0.2s; font-size: 0.95rem;
+        }
+        .size-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+        /* 份量控制 */
+        .portion-control {
+            background: white; padding: 8px 18px; border-radius: 30px;
+            box-shadow: var(--shadow-light); display: flex; align-items: center; gap: 10px; font-weight: 400;
+            border: 1px solid rgba(223,230,233,0.9); margin-left: auto;
+        }
+        .portion-control input {
+            width: 60px; padding: 6px; font-size: 1.1rem; text-align: center;
+            border: 1px solid var(--gray); border-radius: 8px;
+        }
+
+        /* 卡片與格線 */
+        .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .card {
+            background: rgba(255,255,255,0.96); padding: 30px; border-radius: 18px;
+            box-shadow: var(--shadow-medium); margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.8); min-height: 400px;
+        }
+        .card h3 {
+            margin-top: 0; color: var(--primary);
+            border-bottom: 2px solid var(--primary-light); padding-bottom: 15px; margin-bottom: 16px;
+            font-size: 1.5rem; font-weight: 700;
+        }
+        .ingredient-list { list-style: none; padding: 0; }
+        .ingredient-item {
+            display: flex; justify-content: space-between; padding: 10px 5px;
+            border-bottom: 1px dashed var(--gray); font-size: 1.05rem;
+        }
+        .amount { font-weight: 700; color: var(--secondary); }
+
+        /* 分頁按鈕 */
+        .tab-buttons { display: flex; border-bottom: 2px solid var(--gray); margin-bottom: 20px; }
+        .tab-button {
+            background: none; border: none; padding: 10px 15px; margin-right: 10px;
+            cursor: pointer; font-size: 1.05rem; font-weight: 600; color: #888;
+            border-bottom: 3px solid transparent; transition: all 0.2s;
+        }
+        .tab-button:hover { color: var(--primary-dark); }
+        .tab-button.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .tab-content { display: none; padding-top: 10px; animation: fadeInTab 0.3s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 影片與計時器 */
+        .video-container { width: 100%; aspect-ratio: 16 / 9; background-color: #000; border-radius: 10px; overflow: hidden; }
+        .video-container iframe { width: 100%; height: 100%; border: none; }
+        .no-video-message { background-color: #f9f9f9; border: 2px dashed #ddd; border-radius: 10px; padding: 40px; text-align: center; color: #999; }
+        .step-item { margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-start; }
+        .step-checkbox { min-width: 24px; min-height: 24px; margin-top: 4px; cursor: pointer; accent-color: var(--primary); }
+        .step-content { flex: 1; line-height: 1.7; font-size: 1.05rem; }
+        .step-checkbox:checked + .step-content label { text-decoration: line-through; color: #aaa; }
+        .timer-btn {
+            background-color: var(--primary); color: white; border: none; padding: 8px 16px;
+            border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 8px;
+            display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: 0.2s;
+        }
+        .timer-btn.running { background-color: #f39c12; }
+
+        /* ====================
+           心智圖樣式 (Mind Map CSS)
+           ==================== */
+        #mm-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #f4f4f4;
+            overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+        }
+        #mm-instruction {
+            position: absolute;
+            top: 20px; left: 20px;
+            color: #555; background: rgba(255,255,255,0.8);
+            padding: 10px 15px; border-radius: 5px; z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold;
+        }
+        #mm-canvas-container { width: 100%; height: 100%; position: relative; }
+        #lines-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        
+        /* 心智圖節點樣式 */
+        .mm-line {
+            stroke: #999; stroke-width: 2; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .mm-line.visible { opacity: 1; }
+        
+        .mm-node {
+            position: absolute;
+            background: #fff; border: 2px solid #666; border-radius: 25px;
+            padding: 8px 15px; text-align: center; font-size: 0.9rem; font-weight: 600;
+            color: #333; box-shadow: 3px 3px 8px rgba(0,0,0,0.1);
+            transform: translate(-50%, -50%) scale(0); opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap; z-index: 1;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .mm-node.visible { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        
+        .mm-center-node {
+            width: 130px; height: 130px; border-radius: 50%;
+            background: #eef6fc; border: 3px solid #1976d2; font-size: 1.1rem;
+            z-index: 2; box-shadow: 0 0 20px rgba(25, 118, 210, 0.2);
+        }
+        .mm-main-node { background-color: #fff8e1; border-color: #ffa000; }
+        .mm-sub-node { font-size: 0.85rem; padding: 6px 12px; border: 1px solid #aaa; }
+
+        @media (max-width: 992px) { .grid-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            .sidebar { width: 100%; height: auto; max-height: 200px; }
+            .nav-list { display: flex; overflow-x: auto; white-space: nowrap; }
+            .nav-item { border-right: 1px solid var(--gray); border-bottom: none; }
+            .recipe-header { flex-direction: column; align-items: flex-start; }
+            .portion-control { margin-left: 0; width: 100%; justify-content: space-between; }
+            /* 手機版心智圖高度 */
+            #mm-wrapper { height: 500px; border-top: 1px solid #ddd; }
+        }
+    </style>
+  <link rel="stylesheet" href="../../assets/language.css">
+  <script src="../../assets/translations.js" defer></script>
+  <script src="../../assets/language.js" defer></script>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <h1>shangdao</h1>
+            <p>上統食品 - 圓夢飲品教學</p>
+        </div>
+        <ul class="nav-list" id="navList"></ul>
+    </div>
+
+    <div class="main-content" id="mainContentArea">
+        <div class="recipe-container-padding">
+            <div style="text-align: center; margin-top: 50px; color: #666;">
+                <h2>🥤 歡迎進入飲品數位教室</h2>
+                <p>請選擇左側飲品，並可切換 500cc / 700cc 模式。</p>
+                <p>點擊上方 <b>「課程心智圖」</b> 可查看互動式架構。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 資料來源：圓夢課程_20251115.pdf
+        const recipes = [
+            // --- 茶類 ---
+            { id: "t01", category: "茶類", name: "阿薩姆紅茶", variants: { "500": { ingredients: [{name:"紅茶",val:200,u:"cc"}, {name:"特糖",val:30,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["依杯型選用對應配方 (500cc)。", "將紅茶200cc、特糖30cc倒入雪克杯攪拌。", "加入冰塊至雪克杯滿。", "充分雪克後倒入杯中。"] }, "700": { ingredients: [{name:"紅茶",val:300,u:"cc"}, {name:"特糖",val:45,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["依杯型選用對應配方 (700cc)。", "將紅茶300cc、特糖45cc倒入雪克杯攪拌。", "加入冰塊至雪克杯滿。", "充分雪克後倒入杯中。"] } } },
+            { id: "t02", category: "茶類", name: "茉香鮮綠茶", variants: { "500": { ingredients: [{name:"綠茶",val:200,u:"cc"}, {name:"果糖",val:30,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["將綠茶200cc與果糖30cc倒入雪克杯。", "加入冰塊至雪克杯滿。", "雪克後倒入杯中。"] }, "700": { ingredients: [{name:"綠茶",val:300,u:"cc"}, {name:"果糖",val:45,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["將綠茶300cc與果糖45cc倒入雪克杯。", "加入冰塊至雪克杯滿。", "雪克後倒入杯中。"] } } },
+            { id: "t03", category: "茶類", name: "炭燒烏龍茶", variants: { "500": { ingredients: [{name:"烏龍茶",val:200,u:"cc"}, {name:"果糖",val:30,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["將烏龍茶200cc與果糖30cc倒入雪克杯。", "加入冰塊至滿。", "雪克後倒入杯中。"] }, "700": { ingredients: [{name:"烏龍茶",val:300,u:"cc"}, {name:"果糖",val:45,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["將烏龍茶300cc與果糖45cc倒入雪克杯。", "加入冰塊至滿。", "雪克後倒入杯中。"] } } },
+            { id: "t04", category: "茶類", name: "四季春茶", variants: { "500": { ingredients: [{name:"四季春茶",val:200,u:"cc"}, {name:"果糖",val:30,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["將四季春茶200cc與果糖30cc倒入雪克杯。", "加入冰塊至滿。", "雪克後倒入杯中。"] }, "700": { ingredients: [{name:"四季春茶",val:300,u:"cc"}, {name:"果糖",val:45,u:"cc"}, {name:"冰塊",val:1,u:"滿杯"}], steps: ["將四季春茶300cc與果糖45cc倒入雪克杯。", "加入冰塊至滿。", "雪克後倒入杯中。"] } } },
+
+            // --- 奶茶類 ---
+            { id: "m01", category: "奶茶類", name: "芋香奶茶", variants: { "500": { ingredients: [{name:"綠茶",val:200,u:"cc"},{name:"果糖",val:15,u:"cc"},{name:"芋頭粉",val:30,u:"g"},{name:"奶精粉",val:10,u:"g"},{name:"冰塊",val:1,u:"滿杯"}], steps: ["綠茶200cc + 果糖15cc + 芋頭粉30g + 奶精粉10g。", "攪拌均勻。", "加冰滿雪克。"] }, "700": { ingredients: [{name:"綠茶",val:300,u:"cc"},{name:"果糖",val:22,u:"cc"},{name:"芋頭粉",val:45,u:"g"},{name:"奶精粉",val:15,u:"g"},{name:"冰塊",val:1,u:"滿杯"}], steps: ["綠茶300cc + 果糖22cc + 芋頭粉45g + 奶精粉15g。", "攪拌均勻。", "加冰滿雪克。"] } } },
+            { id: "m02", category: "奶茶類", name: "可可芭蕾", variants: { "500": { ingredients: [{name:"熱水",val:200,u:"cc"},{name:"純巧克力粉",val:10,u:"g"},{name:"奶精粉",val:30,u:"g"},{name:"果糖",val:30,u:"cc"},{name:"冰塊",val:1,u:"滿杯"}], steps: ["熱水200cc先溶解巧克力粉10g。", "加入奶精粉30g、果糖30cc攪拌。", "加冰滿雪克。"] }, "700": { ingredients: [{name:"熱水",val:300,u:"cc"},{name:"純巧克力粉",val:20,u:"g"},{name:"奶精粉",val:40,u:"g"},{name:"果糖",val:40,u:"cc"},{name:"冰塊",val:1,u:"滿杯"}], steps: ["熱水300cc先溶解巧克力粉20g。", "加入奶精粉40g、果糖40cc攪拌。", "加冰滿雪克。"] } } },
+            { id: "m03", category: "奶茶類", name: "玄米玉露", variants: { "500": { ingredients: [{name:"綠茶",val:200,u:"cc"},{name:"果糖",val:15,u:"cc"},{name:"玄米玉露粉",val:30,u:"g"},{name:"奶精粉",val:15,u:"g"}], steps: ["綠茶200cc + 果糖15cc + 玄米粉30g + 奶精15g。", "攪拌後加冰雪克。"] }, "700": { ingredients: [{name:"綠茶",val:300,u:"cc"},{name:"果糖",val:22,u:"cc"},{name:"玄米玉露粉",val:45,u:"g"},{name:"奶精粉",val:22,u:"g"}], steps: ["綠茶300cc + 果糖22cc + 玄米粉45g + 奶精22g。", "攪拌後加冰雪克。"] } } },
+            { id: "m04", category: "奶茶類", name: "胚芽奶茶", variants: { "500": { ingredients: [{name:"綠茶",val:200,u:"cc"},{name:"胚芽粉",val:30,u:"g"},{name:"奶精粉",val:10,u:"g"},{name:"果糖",val:15,u:"cc"}], steps: ["綠茶200cc + 胚芽粉30g + 奶精10g + 果糖15cc。", "攪拌後加冰雪克。"] }, "700": { ingredients: [{name:"綠茶",val:300,u:"cc"},{name:"胚芽粉",val:45,u:"g"},{name:"奶精粉",val:15,u:"g"},{name:"果糖",val:22,u:"cc"}], steps: ["綠茶300cc + 胚芽粉45g + 奶精15g + 果糖22cc。", "攪拌後加冰雪克。"] } } },
+            { id: "m05", category: "奶茶類", name: "紅豆奶茶", variants: { "500": { ingredients: [{name:"紅茶",val:200,u:"cc"},{name:"果糖",val:15,u:"cc"},{name:"紅豆沙粉",val:30,u:"g"},{name:"奶精粉",val:10,u:"g"},{name:"紅豆粒",val:1,u:"勺"}], steps: ["紅茶200cc + 果糖15cc + 紅豆粉30g + 奶精10g 攪拌。", "加入1勺紅豆粒。", "冰8分滿雪克。"] }, "700": { ingredients: [{name:"紅茶",val:300,u:"cc"},{name:"果糖",val:30,u:"cc"},{name:"紅豆沙粉",val:45,u:"g"},{name:"奶精粉",val:15,u:"g"},{name:"紅豆粒",val:1.5,u:"勺"}], steps: ["紅茶300cc + 果糖30cc + 紅豆粉45g + 奶精15g 攪拌。", "加入1.5勺紅豆粒。", "冰8分滿雪克。"] } } },
+            { id: "m06", category: "奶茶類", name: "阿薩姆奶茶", variants: { "500": { ingredients: [{name:"熱水",val:100,u:"cc"},{name:"紅茶",val:100,u:"cc"},{name:"阿薩姆粉",val:30,u:"g"},{name:"果糖",val:15,u:"cc"},{name:"奶精",val:10,u:"g"}], steps: ["熱水100cc+紅茶100cc混合。", "加入粉30g、果糖15cc、奶精10g攪拌。", "冰滿雪克。"] }, "700": { ingredients: [{name:"熱水",val:150,u:"cc"},{name:"紅茶",val:150,u:"cc"},{name:"阿薩姆粉",val:45,u:"g"},{name:"果糖",val:22,u:"cc"},{name:"奶精",val:15,u:"g"}], steps: ["熱水150cc+紅茶150cc混合。", "加入粉45g、果糖22cc、奶精15g攪拌。", "冰滿雪克。"] } } },
+            { id: "m07", category: "奶茶類", name: "珍珠奶茶", variants: { "500": { ingredients: [{name:"紅茶",val:200,u:"cc"},{name:"特糖",val:30,u:"cc"},{name:"奶精粉",val:30,u:"g"},{name:"珍珠",val:1,u:"勺"}], steps: ["紅茶200cc+糖30cc+奶精30g攪拌。", "冰8分雪克。", "將1勺珍珠先放入杯中，再倒入奶茶。"] }, "700": { ingredients: [{name:"紅茶",val:300,u:"cc"},{name:"特糖",val:40,u:"cc"},{name:"奶精粉",val:40,u:"g"},{name:"珍珠",val:1.5,u:"勺"}], steps: ["紅茶300cc+糖40cc+奶精40g攪拌。", "冰8分雪克。", "將1.5勺珍珠先放入杯中，再倒入奶茶。"] } } },
+            { id: "m08", category: "奶茶類", name: "沖繩布丁奶茶", variants: { "500": { ingredients: [{name:"熱水",val:200,u:"cc"},{name:"果糖",val:15,u:"cc"},{name:"沖繩粉",val:30,u:"g"},{name:"奶精粉",val:10,u:"g"}], steps: ["熱水200cc+果糖15cc+沖繩粉30g+奶精10g。", "攪拌後加冰雪克。"] }, "700": { ingredients: [{name:"熱水",val:300,u:"cc"},{name:"果糖",val:22,u:"cc"},{name:"沖繩粉",val:45,u:"g"},{name:"奶精粉",val:15,u:"g"}], steps: ["熱水300cc+果糖22cc+沖繩粉45g+奶精15g。", "攪拌後加冰雪克。"] } } },
+            { id: "m09", category: "奶茶類", name: "冬瓜撞奶", variants: { "500": { ingredients: [{name:"熱水",val:100,u:"cc"},{name:"冬瓜露",val:30,u:"cc"},{name:"奶精粉",val:30,u:"g"},{name:"冰塊",val:1,u:"滿"},{name:"冷水",val:1,u:"補滿"}], steps: ["熱水100cc+冬瓜露30cc+奶精30g。", "攪拌後加冰滿，冷水補滿雪克。"] }, "700": { ingredients: [{name:"熱水",val:150,u:"cc"},{name:"冬瓜露",val:45,u:"cc"},{name:"奶精粉",val:45,u:"g"},{name:"冰塊",val:1,u:"滿"},{name:"冷水",val:1,u:"補滿"}], steps: ["熱水150cc+冬瓜露45cc+奶精45g。", "攪拌後加冰滿，冷水補滿雪克。"] } } },
+
+            // --- 調味茶類 ---
+            { id: "f01", category: "調味茶類", name: "百香綠茶", variants: { "500": { ingredients: [{name:"綠茶",val:200,u:"cc"},{name:"百香果汁",val:20,u:"cc"},{name:"百香加子醬",val:20,u:"cc"},{name:"果糖",val:10,u:"cc"}], steps: ["綠茶200cc+百香汁20cc+加子醬20cc+果糖10cc。", "冰滿雪克。"] }, "700": { ingredients: [{name:"綠茶",val:300,u:"cc"},{name:"百香果汁",val:30,u:"cc"},{name:"百香加子醬",val:30,u:"cc"},{name:"果糖",val:20,u:"cc"}], steps: ["綠茶300cc+百香汁30cc+加子醬30cc+果糖20cc。", "冰滿雪克。"] } } },
+            { id: "f02", category: "調味茶類", name: "檸檬紅/綠茶", variants: { "500": { ingredients: [{name:"基底茶",val:200,u:"cc"},{name:"檸檬原汁",val:30,u:"cc"},{name:"果糖",val:60,u:"cc"}], steps: ["基底茶200cc+檸檬汁30cc+果糖60cc。", "冰滿雪克。"] }, "700": { ingredients: [{name:"基底茶",val:300,u:"cc"},{name:"檸檬原汁",val:40,u:"cc"},{name:"果糖",val:70,u:"cc"}], steps: ["基底茶300cc+檸檬汁40cc+果糖70cc。", "冰滿雪克。"] } } },
+            { id: "f03", category: "調味茶類", name: "蜂蜜紅/綠茶", variants: { "500": { ingredients: [{name:"基底茶",val:200,u:"cc"},{name:"蜂蜜",val:40,u:"cc"}], steps: ["基底茶200cc+蜂蜜40cc溶解。", "冰滿雪克。"] }, "700": { ingredients: [{name:"基底茶",val:300,u:"cc"},{name:"蜂蜜",val:60,u:"cc"}], steps: ["基底茶300cc+蜂蜜60cc溶解。", "冰滿雪克。"] } } },
+            { id: "f04", category: "調味茶類", name: "夏威夷冰茶", variants: { "500": { ingredients: [{name:"綠茶",val:200,u:"cc"},{name:"夏威夷汁",val:50,u:"cc"},{name:"果糖",val:20,u:"cc"}], steps: ["綠茶200cc+夏威夷汁50cc+果糖20cc。", "冰滿雪克。"] }, "700": { ingredients: [{name:"綠茶",val:300,u:"cc"},{name:"夏威夷汁",val:60,u:"cc"},{name:"果糖",val:25,u:"cc"}], steps: ["綠茶300cc+夏威夷汁60cc+果糖25cc。", "冰滿雪克。"] } } },
+            { id: "f05", category: "調味茶類", name: "柳橙果茶", variants: { "500": { ingredients: [{name:"紅茶",val:200,u:"cc"},{name:"柳橙纖顆",val:40,u:"cc"},{name:"果糖",val:15,u:"cc"}], steps: ["紅茶200cc+柳橙纖顆40cc+果糖15cc。", "冰滿雪克。"] }, "700": { ingredients: [{name:"紅茶",val:300,u:"cc"},{name:"柳橙纖顆",val:50,u:"cc"},{name:"果糖",val:20,u:"cc"}], steps: ["紅茶300cc+柳橙纖顆50cc+果糖20cc。", "冰滿雪克。"] } } },
+            { id: "f06", category: "調味茶類", name: "蜂蜜檸檬", variants: { "500": { ingredients: [{name:"生飲水",val:200,u:"cc"},{name:"蜂蜜",val:40,u:"cc"},{name:"檸檬原汁",val:15,u:"cc"}], steps: ["水200cc+蜂蜜40cc+檸檬汁15cc溶解。", "冰滿雪克。"] }, "700": { ingredients: [{name:"生飲水",val:300,u:"cc"},{name:"蜂蜜",val:50,u:"cc"},{name:"檸檬原汁",val:20,u:"cc"}], steps: ["水300cc+蜂蜜50cc+檸檬汁20cc溶解。", "冰滿雪克。"] } } },
+            { id: "f07", category: "調味茶類", name: "金桔檸檬", variants: { "500": { ingredients: [{name:"生飲水",val:200,u:"cc"},{name:"白話梅",val:1,u:"顆"},{name:"鮮桔汁",val:30,u:"cc"},{name:"檸檬汁",val:20,u:"cc"},{name:"果糖",val:10,u:"cc"}], steps: ["水200cc+1顆話梅+鮮桔汁30cc+檸檬汁20cc+果糖10cc。", "冰滿雪克。"] }, "700": { ingredients: [{name:"生飲水",val:300,u:"cc"},{name:"白話梅",val:2,u:"顆"},{name:"鮮桔汁",val:40,u:"cc"},{name:"檸檬汁",val:30,u:"cc"},{name:"果糖",val:20,u:"cc"}], steps: ["水300cc+2顆話梅+鮮桔汁40cc+檸檬汁30cc+果糖20cc。", "冰滿雪克。"] } } },
+
+            // --- 冰沙類 ---
+            { id: "s01", category: "冰沙類", name: "百香冰沙", variants: { "500": { ingredients: [{name:"冰塊",val:700,u:"cc"},{name:"百香果汁",val:80,u:"cc"},{name:"冷水",val:60,u:"cc"},{name:"冰沙粉",val:10,u:"g"}], steps: ["700cc冰塊 + 80cc百香汁 + 60cc水 + 10g冰沙粉。", "倒入冰沙機攪打。"] }, "700": { ingredients: [{name:"冰塊",val:1000,u:"cc"},{name:"百香果汁",val:90,u:"cc"},{name:"冷水",val:70,u:"cc"},{name:"冰沙粉",val:15,u:"g"}], steps: ["1000cc冰塊 + 90cc百香汁 + 70cc水 + 15g冰沙粉。", "倒入冰沙機攪打。"] } } },
+            { id: "s02", category: "冰沙類", name: "冬瓜冰沙", variants: { "500": { ingredients: [{name:"冰塊",val:700,u:"cc"},{name:"冬瓜露",val:80,u:"cc"},{name:"冷水",val:60,u:"cc"},{name:"冰沙粉",val:10,u:"g"}], steps: ["700cc冰塊 + 80cc冬瓜露 + 60cc水 + 10g冰沙粉。", "倒入冰沙機攪打。"] }, "700": { ingredients: [{name:"冰塊",val:1000,u:"cc"},{name:"冬瓜露",val:90,u:"cc"},{name:"冷水",val:70,u:"cc"},{name:"冰沙粉",val:15,u:"g"}], steps: ["1000cc冰塊 + 90cc冬瓜露 + 70cc水 + 15g冰沙粉。", "倒入冰沙機攪打。"] } } },
+            { id: "s03", category: "冰沙類", name: "芒果冰沙", variants: { "500": { ingredients: [{name:"冰塊",val:700,u:"cc"},{name:"芒果汁",val:80,u:"cc"},{name:"冷水",val:60,u:"cc"},{name:"冰沙粉",val:10,u:"g"}], steps: ["700cc冰塊 + 80cc芒果汁 + 60cc水 + 10g冰沙粉。", "倒入冰沙機攪打。"] }, "700": { ingredients: [{name:"冰塊",val:1000,u:"cc"},{name:"芒果汁",val:90,u:"cc"},{name:"冷水",val:70,u:"cc"},{name:"冰沙粉",val:15,u:"g"}], steps: ["1000cc冰塊 + 90cc芒果汁 + 70cc水 + 15g冰沙粉。", "倒入冰沙機攪打。"] } } },
+            { id: "s04", category: "冰沙類", name: "可可冰沙", variants: { "500": { ingredients: [{name:"冰塊",val:700,u:"cc"},{name:"純巧克力粉",val:10,u:"g"},{name:"奶精粉",val:30,u:"g"},{name:"果糖",val:30,u:"cc"},{name:"冷水",val:80,u:"cc"},{name:"冰沙粉",val:10,u:"g"}], steps: ["所有材料(水80cc/冰700cc)放入冰沙機。", "攪打至綿密。"] }, "700": { ingredients: [{name:"冰塊",val:1000,u:"cc"},{name:"純巧克力粉",val:20,u:"g"},{name:"奶精粉",val:40,u:"g"},{name:"果糖",val:40,u:"cc"},{name:"冷水",val:100,u:"cc"},{name:"冰沙粉",val:15,u:"g"}], steps: ["所有材料(水100cc/冰1000cc)放入冰沙機。", "攪打至綿密。"] } } },
+
+            // --- 咖啡系列 ---
+            { id: "c01", category: "咖啡系列", name: "拿鐵咖啡", standard: { ingredients: [{name:"全脂鮮奶",val:150,u:"cc"},{name:"濃縮咖啡液",val:100,u:"cc"},{name:"特糖",val:20,u:"cc"},{name:"冰塊",val:0.5,u:"杯"}], steps: ["150cc鮮奶打奶泡。", "100cc咖啡+20cc糖溶解+半杯冰。", "倒入奶泡。"] } },
+            { id: "c02", category: "咖啡系列", name: "摩卡咖啡", standard: { ingredients: [{name:"全脂鮮奶",val:150,u:"cc"},{name:"濃縮咖啡液",val:100,u:"cc"},{name:"巧克力膏",val:20,u:"cc"},{name:"果糖",val:10,u:"cc"},{name:"冰塊",val:0.5,u:"杯"}], steps: ["150cc鮮奶打奶泡。", "咖啡+巧克力膏+果糖混合溶解。", "加半杯冰，倒入奶泡，淋醬裝飾。"] } },
+
+            // --- 配料 ---
+            { id: "p01", category: "配料教學", name: "珍珠煮法", standard: { ingredients: [{name:"珍珠",val:300,u:"g"},{name:"水",val:3000,u:"cc"},{name:"黑糖蜜",val:30,u:"cc"}], steps: [{ text: "水3000cc煮沸(大滾)下珍珠300g。", timer: 0 }, { text: "攪拌至浮起大滾，轉中火蓋蓋子。", timer: 0 }, { text: "煮：25分鐘 (2.0規格)。", timer: 1500 }, { text: "燜：30分鐘 (熄火)。", timer: 1800 }, { text: "確認熟透(透明)，保留少許水，瀝乾清洗。", timer: 0 }, { text: "加入黑糖蜜攪拌保存。", timer: 0 }] } }
+        ];
+
+        let currentRecipe = null;
+        let portionMultiplier = 1;
+        let currentSize = "700";
+        let activeTimer = null;
+
+        // 心智圖變數
+        let mmClickStep = -1;
+        const mmData = {
+            center: { text: "千億市場\n服務 產品" },
+            branches: [
+                { name: "產品", angle: 270, children: ["代客研發", "器具", "設備", "原料", "創新研發"] },
+                { name: "品牌育成", angle: 0, children: ["1. 協助自創品牌", "2. 創新流行店合作", "3. 品牌再造"] },
+                { name: "店鋪建構指導", angle: 90, children: ["1. 開店前諮詢規劃", "2. 形象CI設計", "3. 店面設計", "4. 店動線與作業規劃"] },
+                { name: "產品技術支援", angle: 180, children: ["1. 協助菜單規劃", "2. 產品技術教學", "3. 店的經營輔導"] }
+            ]
+        };
+
+        function init() {
+            renderNav();
+        }
+
+        function renderNav() {
+            const list = document.getElementById('navList');
+            list.innerHTML = '';
+            
+            // 1. 新增心智圖按鈕在最上方
+            const mmLi = document.createElement('li');
+            mmLi.className = 'nav-item mindmap-btn';
+            mmLi.innerHTML = '課程心智圖';
+            mmLi.id = 'nav-mindmap';
+            mmLi.onclick = loadMindMap;
+            list.appendChild(mmLi);
+
+            // 2. 渲染食譜分類
+            const categories = [...new Set(recipes.map(r => r.category))];
+            categories.forEach(cat => {
+                const groupHeader = document.createElement('li');
+                Object.assign(groupHeader.style, {
+                    padding:"10px 20px", fontSize:"0.85rem", color:"#999", fontWeight:"bold", backgroundColor:"#f9f9f9"
+                });
+                groupHeader.innerText = cat;
+                list.appendChild(groupHeader);
+
+                recipes.filter(r => r.category === cat).forEach(recipe => {
+                    const li = document.createElement('li');
+                    li.className = 'nav-item';
+                    li.textContent = recipe.name;
+                    li.onclick = () => loadRecipe(recipe.id);
+                    li.id = `nav-${recipe.id}`;
+                    list.appendChild(li);
+                });
+            });
+        }
+
+        // --- 食譜功能 ---
+        function loadRecipe(id) {
+            // UI 更新
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`nav-${id}`);
+            if(activeEl) activeEl.classList.add('active');
+            
+            currentRecipe = recipes.find(r => r.id === id);
+            portionMultiplier = 1;
+            if (!currentRecipe.variants) currentSize = "standard";
+            
+            renderRecipeContent();
+        }
+
+        function renderRecipeContent() {
+            if (!currentRecipe) return;
+            const container = document.getElementById('mainContentArea');
+            
+            let data = currentRecipe.variants ? currentRecipe.variants[currentSize] : currentRecipe.standard;
+            if (currentRecipe.variants && !currentRecipe.variants[currentSize]) currentSize = "700";
+
+            // 食材
+            const ingredientsHtml = data.ingredients.map(ing => {
+                const amount = ing.val > 0 ? (ing.val * portionMultiplier).toFixed(1).replace('.0', '') : '';
+                return `<li class="ingredient-item"><span>${ing.name}</span><span class="amount">${amount} ${ing.u}</span></li>`;
+            }).join('');
+
+            // 步驟
+            const stepsHtml = data.steps.map((step, index) => {
+                let stepText = typeof step === 'string' ? step : step.text;
+                let timerHtml = '';
+                if (typeof step === 'object' && step.timer > 0) {
+                    timerHtml = `<button class="timer-btn" onclick="toggleTimer(this, ${step.timer})">⏱ 開始計時 (${formatTime(step.timer)})</button>`;
+                }
+                return `
+                    <div class="step-item">
+                        <input type="checkbox" class="step-checkbox" id="step-${index}">
+                        <div class="step-content">
+                            <label for="step-${index}">${index + 1}. ${stepText}</label>
+                            <br>${timerHtml}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            // 影片
+            let videoHtml = currentRecipe.videoUrl && currentRecipe.videoUrl.trim() !== "" 
+                ? `<div class="video-container"><iframe src="${currentRecipe.videoUrl}" allowfullscreen></iframe></div>` 
+                : `<div class="no-video-message"><h3>📹 尚無影片教學</h3><p>此配方暫時沒有上傳教學影片。</p></div>`;
+
+            // 切換按鈕
+            let switcherHtml = currentRecipe.variants ? `
+                <div class="size-switcher">
+                    <button class="size-btn ${currentSize === '500' ? 'active' : ''}" onclick="setSize('500')">500cc (中)</button>
+                    <button class="size-btn ${currentSize === '700' ? 'active' : ''}" onclick="setSize('700')">700cc (大)</button>
+                </div>` : '';
+
+            container.innerHTML = `
+                <div class="recipe-container-padding">
+                    <div class="recipe-wrapper">
+                        <div class="recipe-banner">
+                            <div class="img-placeholder-text">shangdao<br>${currentRecipe.name}</div>
+                        </div>
+                        <div class="recipe-header">
+                            <div class="recipe-title">
+                                <small>${currentRecipe.category}</small>
+                                <h2>${currentRecipe.name}</h2>
+                            </div>
+                            ${switcherHtml}
+                            <div class="portion-control">
+                                <label>製作份量：</label>
+                                <input type="number" value="${portionMultiplier}" step="0.5" min="0.5" onchange="updatePortion(this.value)">
+                                <span>倍</span>
+                            </div>
+                        </div>
+                        <div class="grid-layout">
+                            <div class="card">
+                                <h3>📋 食材配方</h3>
+                                <ul class="ingredient-list">${ingredientsHtml}</ul>
+                            </div>
+                            <div class="card">
+                                <div class="tab-buttons">
+                                    <button class="tab-button active" onclick="switchTab(this, 'steps')">👨‍🍳 步驟教學</button>
+                                    <button class="tab-button" onclick="switchTab(this, 'video')">▶ 影片教學</button>
+                                </div>
+                                <div id="steps-content" class="tab-content active">${stepsHtml}</div>
+                                <div id="video-content" class="tab-content">${videoHtml}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 心智圖功能 ---
+        function loadMindMap() {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-mindmap').classList.add('active');
+
+            const container = document.getElementById('mainContentArea');
+            container.innerHTML = `
+                <div id="mm-wrapper" onclick="handleMindMapClick()">
+                    <div id="mm-instruction">點擊畫面逐步展開心智圖</div>
+                    <div id="mm-canvas-container">
+                        <svg id="lines-layer"></svg>
+                    </div>
+                </div>
+            `;
+
+            // 初始化變數與中心點
+            mmClickStep = -1;
+            setTimeout(initMmCenter, 50); // 延遲一下確保DOM已生成
+        }
+
+        function initMmCenter() {
+            const canvas = document.getElementById('mm-canvas-container');
+            if(!canvas) return;
+            const cx = canvas.clientWidth / 2;
+            const cy = canvas.clientHeight / 2;
+            createMmNode(cx, cy, mmData.center.text, 'mm-center-node');
+            mmClickStep = 0;
+        }
+
+        function handleMindMapClick() {
+            if (mmClickStep >= 0 && mmClickStep < mmData.branches.length) {
+                renderMmBranch(mmData.branches[mmClickStep]);
+                mmClickStep++;
+                if(mmClickStep === mmData.branches.length) {
+                    document.getElementById('mm-instruction').innerText = "展示完成";
+                }
+            }
+        }
+
+        function renderMmBranch(branchData) {
+            const canvas = document.getElementById('mm-canvas-container');
+            const cx = canvas.clientWidth / 2;
+            const cy = canvas.clientHeight / 2;
+            const mainDist = 220;
+            const subDist = 220;
+
+            const branchRad = branchData.angle * (Math.PI / 180);
+            const bx = cx + mainDist * Math.cos(branchRad);
+            const by = cy + mainDist * Math.sin(branchRad);
+
+            createMmLine(cx, cy, bx, by);
+            createMmNode(bx, by, branchData.name, 'mm-main-node');
+
+            const numChildren = branchData.children.length;
+            branchData.children.forEach((childText, index) => {
+                let childX, childY;
+
+                if (branchData.angle === 0 || branchData.angle === 180) {
+                    const vGap = 85;
+                    const totalHeight = (numChildren - 1) * vGap;
+                    const startY = by - totalHeight / 2;
+                    childX = bx + (branchData.angle === 0 ? subDist : -subDist);
+                    childY = startY + index * vGap;
+                } else {
+                    const hGap = 175;
+                    const totalWidth = (numChildren - 1) * hGap;
+                    const startX = bx - totalWidth / 2;
+                    childX = startX + index * hGap;
+                    childY = by + (branchData.angle === 90 ? subDist : -subDist);
+                }
+
+                setTimeout(() => {
+                    createMmLine(bx, by, childX, childY);
+                    createMmNode(childX, childY, childText, 'mm-sub-node');
+                }, 800 + index * 150);
+            });
+        }
+
+        function createMmNode(x, y, text, className) {
+            const container = document.getElementById('mm-canvas-container');
+            if(!container) return;
+            const node = document.createElement('div');
+            node.classList.add('mm-node', className);
+            node.innerHTML = text.replace(/\n/g, '<br>');
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            container.appendChild(node);
+            requestAnimationFrame(() => node.classList.add('visible'));
+        }
+
+        function createMmLine(x1, y1, x2, y2) {
+            const svgLayer = document.getElementById('lines-layer');
+            if(!svgLayer) return;
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.classList.add('mm-line');
+            svgLayer.appendChild(line);
+            requestAnimationFrame(() => line.classList.add('visible'));
+        }
+
+        // --- 共用小工具 ---
+        function setSize(size) { currentSize = size; renderRecipeContent(); }
+        function updatePortion(val) {
+            portionMultiplier = parseFloat(val);
+            if (isNaN(portionMultiplier) || portionMultiplier < 0.1) portionMultiplier = 1;
+            renderRecipeContent();
+        }
+        function switchTab(btn, tabId) {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tabId + '-content').classList.add('active');
+        }
+        function toggleTimer(btn, seconds) {
+            const wasRunning = btn.classList.contains('running');
+            if (activeTimer) {
+                clearInterval(activeTimer.interval);
+                activeTimer.btn.classList.remove('running');
+                activeTimer.btn.textContent = `⏱ 開始計時 (${formatTime(activeTimer.originalSeconds)})`;
+            }
+            if (wasRunning) {
+                clearInterval(activeTimer.interval);
+                btn.classList.remove('running');
+                btn.textContent = `⏱ 重置計時 (${formatTime(seconds)})`;
+                activeTimer = null;
+            } else {
+                let left = seconds;
+                btn.classList.add('running');
+                btn.textContent = `⏳ 剩餘 ${formatTime(left)}`;
+                const interval = setInterval(() => {
+                    left--;
+                    btn.textContent = `⏳ 剩餘 ${formatTime(left)}`;
+                    if (left <= 0) {
+                        clearInterval(interval);
+                        btn.classList.remove('running');
+                        btn.textContent = "🔔 時間到！";
+                        alert("時間到囉！");
+                        activeTimer = null;
+                    }
+                }, 1000);
+                activeTimer = { interval: interval, btn: btn, originalSeconds: seconds };
+            }
+        }
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return s > 0 ? `${m}分${s}秒` : `${m}分`;
+        }
+
+        // 監聽視窗縮放以重繪心智圖(如果在該頁面的話)
+        window.addEventListener('resize', () => {
+            if(document.getElementById('mm-wrapper')) {
+                // 簡單重整邏輯：如果正在看心智圖，重新載入該頁面以重算座標
+                loadMindMap();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

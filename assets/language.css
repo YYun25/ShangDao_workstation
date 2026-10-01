@@ -1,0 +1,53 @@
+/* A compact shared control, with enough room for longer English labels. */
+.language-bar { display: flex; justify-content: flex-end; max-width: 960px; margin: 0 auto 24px; }
+.language-switch { display: inline-flex; flex-shrink: 0; gap: 3px; padding: 4px; border: 1px solid #cbdedd; border-radius: 999px; background: #fff; box-shadow: 0 2px 10px #163f4210; }
+.language-switch button { min-width: 62px; margin: 0; padding: 7px 13px; border: 0; border-radius: 999px; background: transparent; color: #456469; font: 600 13px/1.4 Arial, sans-serif; cursor: pointer; }
+.language-switch button[aria-pressed="true"] { background: #087f83; color: #fff; }
+.language-switch button:hover { background: #e6f3f2; color: #07666b; }
+.language-switch button[aria-pressed="true"]:hover { background: #07666b; color: #fff; }
+.language-switch button:focus-visible { outline: 3px solid #69a84f; outline-offset: 3px; }
+.brand .language-switch { margin-top: 12px; }
+html[data-language="en"] .nav-item { white-space: normal; line-height: 1.45; overflow-wrap: anywhere; }
+html[data-language="en"] .recipe-header { flex-wrap: wrap; gap: 12px; }
+html[data-language="en"] .portion-control { flex-wrap: wrap; }
+html[data-language="en"] .mm-node { white-space: normal; max-width: 185px; line-height: 1.35; font-size: 12px; }
+html[data-language="en"] .mm-center-node { max-width: 130px; }
+@media (max-width: 768px) {
+  .language-bar { margin-bottom: 16px; }
+  .brand .language-switch { margin-top: 8px; }
+  html[data-language="en"] .nav-list { white-space: normal; }
+  html[data-language="en"] .nav-item { min-width: 160px; }
+}
+.navbar { gap: 16px; flex-wrap: wrap; }
+.navbar nav { margin-left: auto; }
+.navbar > .language-switch { margin-left: 8px; }
+@media (max-width: 600px) {
+  .navbar { padding: 14px 18px; gap: 12px; }
+  .navbar .logo { font-size: 20px; }
+  .navbar nav { order: 3; width: 100%; margin: 0; }
+  .navbar nav a { margin: 0 18px 0 0; }
+  .navbar > .language-switch { margin-left: auto; }
+}
+.ingredient-item { gap: 12px; }
+.ingredient-item > span:first-child { min-width: 0; }
+.ingredient-item .amount { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 768px) {
+  .sidebar { max-height: none; height: auto; flex-shrink: 0; overflow: visible; }
+  .sidebar .brand { position: static; padding: 16px; }
+  .sidebar .brand h1 { font-size: 19px; letter-spacing: 0; }
+  .sidebar .brand p { font-size: 12px; }
+  .sidebar .nav-list { min-height: 64px; max-height: 120px; overflow-x: auto; flex-shrink: 0; }
+  #mm-wrapper { overflow: auto; }
+  #mm-canvas-container { min-width: 1000px; min-height: 820px; }
+}
+.sidebar { box-sizing: border-box; }
+.main-content { min-width: 0; }
+#mm-wrapper { overflow: auto; }
+#mm-canvas-container { min-width: 1100px; min-height: 1000px; }
+.mm-node { box-sizing: border-box; }
+html[data-language="en"] .mm-sub-node { max-width: 165px; font-size: 12px; }
+@media (max-width: 768px) {
+  .back-btn { position: static; align-self: flex-start; margin: 0 20px 24px; }
+  .tab-content { max-height: none; }
+}
+#mm-instruction { top: 110px; pointer-events: none; font-size: 12px; }

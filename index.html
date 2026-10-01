@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>上統工作站</title>
+  <style>
+    :root { --brand: #087f83; --brand-dark: #07666b; --green: #69a84f; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, "Noto Sans TC", sans-serif; background: #f2f8f7; margin: 0; padding: 32px 24px 60px; text-align: center; color: #214448; }
+    h1 { color: var(--brand-dark); margin: 0 0 12px; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.02em; }
+    body > p { margin: 0; color: #617c7e; font-size: 16px; }
+    .buttons { max-width: 800px; margin: 36px auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .buttons button { display: flex; align-items: center; gap: 16px; min-height: 100px; padding: 22px; border: 1px solid #d8e7e4; border-radius: 18px; background: #fff; color: var(--brand-dark); font: 600 17px/1.45 Arial, "Noto Sans TC", sans-serif; text-align: left; cursor: pointer; box-shadow: 0 4px 16px #163f4205; transition: transform .18s, box-shadow .18s, border-color .18s; }
+    .buttons button::before { content: attr(data-icon); display: grid; place-items: center; flex: 0 0 44px; height: 44px; border-radius: 12px; background: #eaf5f2; color: var(--brand); font-size: 20px; }
+    .buttons button::after { content: '↗'; margin-left: auto; color: #89a6a3; font-weight: 400; }
+    .buttons button:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 8px 24px #163f4212; }
+    .buttons button:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+    @media (max-width: 580px) { body { padding: 24px 16px 40px; } .buttons { grid-template-columns: 1fr; gap: 12px; margin-top: 28px; } .buttons button { min-height: 84px; padding: 18px; } }
+  </style>
+  <link rel="stylesheet" href="assets/language.css">
+  <script src="assets/translations.js" defer></script>
+  <script src="assets/language.js" defer></script>
+</head>
+<body>
+  <h1>上統工作站</h1>
+  <p>請選擇要使用的系統</p>
+
+  <div class="buttons">
+    <button data-icon="$" onclick="window.open('https://script.google.com/macros/s/AKfycbydcW0PesgE2SiOKbCdX9v_qjsgpMpPQGzQbPE_L9nJCXnIcIfS_WrMIXMRSZo50LnJ/exec', '_blank', 'noopener')">價格</button>
+    <button data-icon="◎" onclick="window.open('https://script.google.com/macros/s/AKfycbx1IlIhM4CnAJl743T_bzm6UYsRNTAp_SfBYisk_SeI_Xm-VslpgfrpGVrXqstaFx-4/exec?state=92234443021e4327b4eb8ad814fc7cef75d4a81a3de547ea870b6bb8c8d8fab3&iss=https%3A%2F%2Faccounts.google.com&code=4%2F0ATsMZqAaK5NHdj39Sx_Hy_sM5gqJfEeo1C0DQQZG8b6Lcthu7BM6hvb1kXLkD1y_RrWoUw&scope=email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=none', '_blank', 'noopener')">CRM</button>
+    <button data-icon="?" onclick="window.open('https://www.hx-i.com/html/index.html', '_blank', 'noopener')">FAQ</button>
+    <button data-icon="☑" onclick="window.open('https://script.google.com/macros/s/AKfycbzDDwAfQL3IOlWcvlwdozLrwfkZauL04PBAbDjRasxqIU6DQ4NDUeAFptfUMFYdEyhC/exec', '_blank', 'noopener')">問卷</button>
+    <button data-icon="☷" onclick="window.open('./課程202511/cover.html', '_blank', 'noopener')">菜單</button>
+    <button data-icon="▦" onclick="window.open('https://datastudio.google.com/reporting/30a73c37-b9f3-465e-9418-e8f34ef77d5e', '_blank', 'noopener')">客戶商品分析</button>
+    <button data-icon="▤" onclick="window.open('https://datastudio.google.com/reporting/1360d9f2-2ab8-49f7-ae7d-6ab8a717257a', '_blank', 'noopener')">日報表</button>
+    <button data-icon="↔" onclick="window.open('https://datastudio.google.com/reporting/53e12733-3cde-4623-aef1-ad30504db00b', '_blank', 'noopener')">客戶交易分析</button>
+</div>
+</body>
+</html>

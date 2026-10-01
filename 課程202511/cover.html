@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上統食品 - 課程選單</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========== 基本重置 ========== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #272727 0, #141414 48%, #050505 100%);
+            color: #fff;
+            font-family: 'Noto Sans TC', sans-serif;
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ========== 導航列 ========== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            background-color: rgba(0, 0, 0, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            background-color: rgba(0, 0, 0, 0.98);
+        }
+
+        .logo {
+            color: #E50914;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+
+        .navbar nav a {
+            margin-left: 20px;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .navbar nav a::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 0;
+            height: 2px;
+            background-color: #E50914;
+            transition: width 0.25s ease;
+        }
+
+        .navbar nav a:hover::after {
+            width: 100%;
+        }
+
+        /* ========== Hero Section ========== */
+        .hero-section {
+            padding: 90px 50px 40px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg-glow {
+            position: absolute;
+            top: -100px;
+            right: -80px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(229,9,20,0.4), transparent 60%);
+            opacity: 0.7;
+            pointer-events: none;
+            filter: blur(4px);
+        }
+
+        .hero-section h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            animation: heroGlow 3s ease-in-out infinite alternate;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            color: #ccc;
+            max-width: 540px;
+            margin-bottom: 25px;
+        }
+
+        .hero-tagline {
+            font-size: 13px;
+            color: #ffb366;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            border-radius: 4px;
+            padding: 10px 18px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: none;
+            background: linear-gradient(135deg, #E50914, #ff4b2b);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        @keyframes heroGlow {
+            from { text-shadow: 0 0 4px rgba(255,255,255,0.2); }
+            to   { text-shadow: 0 0 16px rgba(255,255,255,0.4); }
+        }
+
+        /* ========== 課程 Row ========== */
+        .course-row {
+            padding: 10px 0 40px 0;
+            margin-top: 10px;
+        }
+
+        .course-row-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding: 0 50px;
+        }
+
+        .course-row h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .course-row span.row-subtitle {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .row-wrapper {
+            position: relative;
+            padding: 4px 50px 0 50px;
+        }
+
+        .row-posters {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 12px;
+            scroll-behavior: smooth;
+            padding-bottom: 12px;
+        }
+
+        .row-posters::-webkit-scrollbar {
+            display: none;
+        }
+        .row-posters {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .row-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 80px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+            transition: background 0.2s, transform 0.2s;
+            z-index: 10;
+        }
+
+        .row-arrow:hover {
+            background: rgba(0,0,0,0.8);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .row-arrow.left  { left: 50px; }
+        .row-arrow.right { right: 50px; }
+
+        @media (max-width: 768px) {
+            .row-arrow {
+                display: none;
+            }
+        }
+
+        /* ========== 課程卡片 ========== */
+        .poster {
+            min-width: 240px;
+            max-width: 240px;
+            height: 340px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+            overflow: hidden;
+            border-radius: 8px;
+            position: relative;
+            background: #222;
+        }
+
+        .poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transform: scale(1.01);
+            transition: transform 0.35s ease;
+        }
+
+        .poster:hover {
+            transform: translateY(-6px) scale(1.04);
+            z-index: 10;
+            box-shadow: 0 14px 30px rgba(0,0,0,0.75);
+        }
+
+        .poster:hover img {
+            transform: scale(1.08);
+        }
+
+        .poster-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.88), rgba(0,0,0,0.05) 55%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .poster:hover .poster-gradient {
+            opacity: 1;
+        }
+
+        .poster-info {
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            right: 12px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            font-size: 13px;
+        }
+
+        .poster-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .poster-meta {
+            font-size: 11px;
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+
+        .poster-tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.4);
+            margin-right: 4px;
+            margin-bottom: 3px;
+        }
+
+        .poster:hover .poster-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .badge-duration {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(229,9,20,0.9);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(0,0,0,0.6);
+        }
+
+        /* 浮動效果 */
+        .poster:nth-child(2n) {
+            animation: floatCard 5s ease-in-out infinite alternate;
+        }
+        .poster:nth-child(2n+1) {
+            animation: floatCard 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatCard {
+            from { transform: translateY(0); }
+            to   { transform: translateY(-4px); }
+        }
+
+        .poster:hover {
+            animation: none;
+        }
+
+        footer {
+            padding: 18px 50px 30px 50px;
+            font-size: 11px;
+            color: #777;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 20px;
+            }
+
+            .hero-section {
+                padding: 70px 20px 30px 20px;
+            }
+
+            .course-row-header,
+            .row-wrapper {
+                padding: 0 20px;
+            }
+
+            .poster {
+                min-width: 72vw;
+                max-width: 72vw;
+            }
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/language.css">
+  <script src="../assets/translations.js" defer></script>
+  <script src="../assets/language.js" defer></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+    <div class="logo">shangdao 課程</div>
+    <nav>
+        <a href="#">首頁</a>
+        <a href="#">所有課程</a>
+        <a href="#">聯絡我們</a>
+    </nav>
+</header>
+
+<div class="main-content">
+    <div class="hero-section">
+        <div class="hero-bg-glow"></div>
+        <div class="hero-tagline">ONE DAY • CHANGE YOUR MENU</div>
+        <h1>專業技能課程館</h1>
+        <p>從雪花冰、手工甜品到異國輕食與飲品調製，一次學會實務技術與配方比例，打造屬於自己的人氣店。</p>
+        
+        <!-- ⭐ 只保留一顆按鈕 ⭐ -->
+        <div class="hero-btns">
+            <button class="btn-primary" onclick="scrollToCourses()">
+                立即瀏覽課程
+            </button>
+        </div>
+    </div>
+
+    <section class="course-row" id="course-row">
+        <div class="course-row-header">
+            <div>
+                <h2>🔥 熱門推薦課程</h2>
+                <span class="row-subtitle">滑動或點選課程封面，即可進入詳細介紹頁面</span>
+            </div>
+        </div>
+
+        <div class="row-wrapper">
+            <button class="row-arrow left"  aria-label="上一排" onclick="scrollRow(-1)">&#8249;</button>
+            <button class="row-arrow right" aria-label="下一排" onclick="scrollRow(1)">&#8250;</button>
+
+            <div class="row-posters" id="course-list">
+
+                <!-- 1 傳統豆花課程 -->
+                <div class="poster" data-course-id="tofu" onclick="navigateToCourse('tofu')">
+                    <span class="badge-duration">6h</span>
+                    <img src="雪花冰一天課程_1.png" alt="傳統豆花課程">
+                    <div class="poster-gradient"></div>
+                    <div class="poster-info">
+                        <div class="poster-title">古早味豆花課程</div>
+                        <div class="poster-meta">豆漿研磨、糖水製作、各式豆花配料</div>
+                        <span class="poster-tag">豆花</span>
+                        <span class="poster-tag">傳統甜品</span>
+                    </div>
+                </div>
+
+                <!-- 2 圓夢 5000 專案 -->
+                <div class="poster" data-course-id="bubble-tea-5000" onclick="navigateToCourse('bubble-tea-5000')">
+                    <span class="badge-duration">1 day</span>
+                    <img src="202012124_CS6_圓夢5000_001_發印_框_工作區域 1.png" alt="圓夢專案 - 飲品調製">
+                    <div class="poster-gradient"></div>
+                    <div class="poster-info">
+                        <div class="poster-title">圓夢專案 - 調飲速成班</div>
+                        <div class="poster-meta">從茶飲市場到飲品實作，一天打好基礎。</div>
+                        <span class="poster-tag">飲品入門</span>
+                        <span class="poster-tag">創業準備</span>
+                    </div>
+                </div>
+
+                <!-- 3 純手工甜品課程 -->
+                <div class="poster" data-course-id="dessert" onclick="navigateToCourse('dessert')">
+                    <span class="badge-duration">6h</span>
+                    <img src="甜品一天課程_1.png" alt="純手工甜品課程">
+                    <div class="poster-gradient"></div>
+                    <div class="poster-info">
+                        <div class="poster-title">純手工甜品課程</div>
+                        <div class="poster-meta">番薯圓、芋圓、仙草凍與古早味甜湯一次學。</div>
+                        <span class="poster-tag">Q 彈芋圓</span>
+                        <span class="poster-tag">熱銷甜品</span>
+                    </div>
+                </div>
+
+                <!-- 4 雪花冰課程 -->
+                <div class="poster" data-course-id="shaved-ice" onclick="navigateToCourse('shaved-ice')">
+                    <span class="badge-duration">6h</span>
+                    <img src="雪花氷一天_0.png" alt="雪花冰課程">
+                    <div class="poster-gradient"></div>
+                    <div class="poster-info">
+                        <div class="poster-title">綿密雪花冰課程</div>
+                        <div class="poster-meta">冰磚配方、裝飾擺盤與多款雪花冰實作。</div>
+                        <span class="poster-tag">夏季必備</span>
+                        <span class="poster-tag">冰品</span>
+                    </div>
+                </div>
+
+                <!-- 5 異國風輕食課程 -->
+                <div class="poster" data-course-id="light-meal" onclick="navigateToCourse('light-meal')">
+                    <span class="badge-duration">6h</span>
+                    <img src="異國風情_0.png" alt="異國風輕食課程">
+                    <div class="poster-gradient"></div>
+                    <div class="poster-info">
+                        <div class="poster-title">精選異國輕食課程</div>
+                        <div class="poster-meta">鬆餅麵糊、卡士達、甜鹹組合一次掌握。</div>
+                        <span class="poster-tag">鬆餅</span>
+                        <span class="poster-tag">輕食</span>
+                    </div>
+                </div>
+
+                <!-- 6 珍珠奶茶課程 -->
+                <div class="poster" data-course-id="bubble-tea-pro" onclick="navigateToCourse('bubble-tea-pro')">
+                    <span class="badge-duration">6–18h</span>
+                    <img src="珍奶專案課程三天_1.png" alt="珍珠奶茶課程">
+                    <div class="poster-gradient"></div>
+                    <div class="poster-info">
+                        <div class="poster-title">Q 軟珍珠奶茶課程</div>
+                        <div class="poster-meta">珍珠熬煮、茶湯比例與多款奶飲配方。</div>
+                        <span class="poster-tag">珍奶</span>
+                        <span class="poster-tag">飲品專班</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</div>
+
+<footer>
+    shangdao Food Co., Ltd. © 2025 ｜ 本頁為示意版型，可依實際課程內容調整。
+</footer>
+
+<script>
+    // 捲動時給 navbar 加陰影
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 10) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    // Hero 按鈕滾動到課程區
+    function scrollToCourses() {
+        const courseRow = document.getElementById('course-row');
+        courseRow.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 左右箭頭控制橫向捲動
+    function scrollRow(direction) {
+        const row = document.getElementById('course-list');
+        const poster = row.querySelector('.poster');
+        const cardWidth = poster ? poster.getBoundingClientRect().width + 12 : 260;
+        row.scrollBy({ left: direction * cardWidth * 2, behavior: 'smooth' });
+    }
+
+    // 點擊跳轉課程
+    function navigateToCourse(courseId) {
+        const courseUrls = {
+            'tofu': './Douhua/Douhua.html',
+            'bubble-tea-5000': './Dream/Dream.html',
+            'dessert': './Desert/Desert.html',
+            'shaved-ice': './Ice/Ice.html',
+            'light-meal': './Meal/Meal.html',
+            'bubble-tea-pro': './Bubble/Bubble.html'
+        };
+
+        const url = courseUrls[courseId];
+        if (url) {
+            window.location.href = url;
+        } else {
+            alert('課程頁面尚未建立，ID: ' + courseId);
+        }
+    }
+</script>
+
+</body>
+</html>
